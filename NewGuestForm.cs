@@ -8,7 +8,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace DDDD
 {
@@ -22,21 +21,14 @@ namespace DDDD
 
         private void LoadRooms()
         {
-            try
-            {
-                // список комнат
-                List<Rooms> rooms = HotelDatabase.GetRooms();
+            List<Rooms> rooms = HotelDatabase.GetRooms();
 
-                comboBox1.DisplayMember = "Number"; 
-                comboBox1.ValueMember = "Id";       
+
+            if (comboBox1 != null)
+            {
+                comboBox1.DisplayMember = "Number";
+                comboBox1.ValueMember = "Id";
                 comboBox1.DataSource = rooms;
-
-                comboBox1.SelectedIndex = -1;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка загрузки комнат: {ex.Message}",
-                    "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
         private void PassRndBtn_Click(object sender, EventArgs e)
@@ -49,56 +41,46 @@ namespace DDDD
         private void PhoneRndBtn_Click(object sender, EventArgs e)
         {
             Random rnd = new Random();
-            string phone = $"89{rnd.Next(10, 99)}"; 
+            string phone = $"89{rnd.Next(4, 99)}"; 
             textBox3.Text = phone; 
         }
 
         private void AddGuestBtn_Click(object sender, EventArgs e)
         {
-
-            if (string.IsNullOrWhiteSpace(textBox6.Text) ||
-                string.IsNullOrWhiteSpace(textBox5.Text) ||
-                string.IsNullOrWhiteSpace(textBox4.Text) ||
-                string.IsNullOrWhiteSpace(textBox3.Text) || 
-                string.IsNullOrWhiteSpace(textBox2.Text) || 
-                comboBox1.SelectedValue == null)            
-            {
-                MessageBox.Show("Заполните все поля и выберите комнату!",
-                    "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
             try
             {
-                // Добавляем гостя в БД
-                string query = @"
-                    INSERT INTO Guest (Name, Surname, Last_Name, Phone, Passport, RoomID)
-                    VALUES (@name, @surname, @lastname, @phone, @passport, @roomid)";
-
-                using (var connection = new SQLiteConnection(HotelDatabase.ConnectionString))
+                if (string.IsNullOrWhiteSpace(textBox6.Text) || 
+                    string.IsNullOrWhiteSpace(textBox5.Text) ||
+                    string.IsNullOrWhiteSpace(textBox4.Text) || 
+                    string.IsNullOrWhiteSpace(textBox3.Text) || 
+                    string.IsNullOrWhiteSpace(textBox2.Text) || 
+                    comboBox1.SelectedItem == null)             
                 {
-                    connection.Open();
-                    using (var command = new SQLiteCommand(query, connection))
-                    {
-                        command.Parameters.AddWithValue("@name", textBox6.Text.Trim());
-                        command.Parameters.AddWithValue("@surname", textBox5.Text.Trim());
-                        command.Parameters.AddWithValue("@lastname", textBox4.Text.Trim());
-                        command.Parameters.AddWithValue("@phone", textBox3.Text.Trim());
-                        command.Parameters.AddWithValue("@passport", textBox2.Text.Trim());
-                        command.Parameters.AddWithValue("@roomid", comboBox1.SelectedValue);
-
-                        command.ExecuteNonQuery();
-                    }
+                    MessageBox.Show("Пожалуйста, заполните все поля и выберите комнату!",
+                        "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
                 }
 
-                MessageBox.Show("Гость успешно добавлен!", "Успех",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                Rooms selectedRoom = (Rooms)comboBox1.SelectedItem;
+
+                Guests newGuest = new Guests
+                {
+                    Name = textBox6.Text.Trim(),
+                    Surname = textBox5.Text.Trim(),
+                    LastName = textBox4.Text.Trim(),
+                    Phone = textBox3.Text.Trim(),
+                    Passport = textBox2.Text.Trim(),
+                    RoomID = selectedRoom.Id 
+                };
+
+                Guests addedGuest = HotelDatabase.AddGuest(newGuest);
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка при добавлении гостя: {ex.Message}",
                     "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+            this.Close();
         }
     }
 }
