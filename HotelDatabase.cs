@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DDDD.Modules;
+using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
@@ -70,9 +71,9 @@ namespace DDDD
             conn.Open();
 
             string query = @"
-        INSERT INTO Guest (Name, Surname, Last_Name, Phone, Passport, RoomID) 
-        VALUES (@name, @surname, @lastname, @phone, @passport, @roomid);
-        SELECT last_insert_rowid();";
+                INSERT INTO Guest (Name, Surname, Last_Name, Phone, Passport, RoomID) 
+                VALUES (@name, @surname, @lastname, @phone, @passport, @roomid);
+                SELECT last_insert_rowid();";
 
             using var cmd = new SQLiteCommand(query, conn);
 
@@ -90,6 +91,48 @@ namespace DDDD
             }
 
             return guest;
+        }
+
+        // НОВЫЙ МЕТОД: Добавление комнаты
+        public static Rooms AddRoom(Rooms room)
+        {
+            using var conn = new SQLiteConnection($"Data Source={ConnectionString};Version=3;");
+            conn.Open();
+
+            string query = @"
+                INSERT INTO Room (Number, Layer, Category, Locked) 
+                VALUES (@number, @layer, @category, @locked);
+                SELECT last_insert_rowid();";
+
+            using var cmd = new SQLiteCommand(query, conn);
+
+            cmd.Parameters.AddWithValue("@number", room.Number);
+            cmd.Parameters.AddWithValue("@layer", room.Layer);
+            cmd.Parameters.AddWithValue("@category", room.Category);
+            cmd.Parameters.AddWithValue("@locked", room.Locked);
+
+            object result = cmd.ExecuteScalar();
+            if (result != null && result != DBNull.Value)
+            {
+                room.Id = Convert.ToInt32(result);
+            }
+
+            return room;
+        }
+
+        // НОВЫЙ МЕТОД: Проверка существования комнаты по номеру
+        public static bool IsRoomExists(string roomNumber)
+        {
+            using var conn = new SQLiteConnection($"Data Source={ConnectionString};Version=3;");
+            conn.Open();
+
+            string query = "SELECT COUNT(*) FROM Room WHERE Number = @number";
+
+            using var cmd = new SQLiteCommand(query, conn);
+            cmd.Parameters.AddWithValue("@number", roomNumber);
+
+            int count = Convert.ToInt32(cmd.ExecuteScalar());
+            return count > 0;
         }
     }
 }

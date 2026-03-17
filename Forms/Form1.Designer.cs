@@ -32,7 +32,8 @@
             dgvRooms = new DataGridView();
             menuStrip1 = new MenuStrip();
             добавитьГостяToolStripMenuItem = new ToolStripMenuItem();
-            добавтьЗаписьToolStripMenuItem = new ToolStripMenuItem();
+            добавитьНомерToolStripMenuItem = new ToolStripMenuItem();
+            удалитьНомерToolStripMenuItem = new ToolStripMenuItem();
             dgvGuests = new DataGridView();
             ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
             splitContainer1.Panel1.SuspendLayout();
@@ -73,7 +74,7 @@
             // 
             // menuStrip1
             // 
-            menuStrip1.Items.AddRange(new ToolStripItem[] { добавитьГостяToolStripMenuItem, добавтьЗаписьToolStripMenuItem });
+            menuStrip1.Items.AddRange(new ToolStripItem[] { добавитьГостяToolStripMenuItem, добавитьНомерToolStripMenuItem, удалитьНомерToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
             menuStrip1.Size = new Size(800, 24);
@@ -87,11 +88,19 @@
             добавитьГостяToolStripMenuItem.Text = "Добавить гостя";
             добавитьГостяToolStripMenuItem.Click += добавитьГостяToolStripMenuItem_Click;
             // 
-            // добавтьЗаписьToolStripMenuItem
+            // добавитьНомерToolStripMenuItem
             // 
-            добавтьЗаписьToolStripMenuItem.Name = "добавтьЗаписьToolStripMenuItem";
-            добавтьЗаписьToolStripMenuItem.Size = new Size(111, 20);
-            добавтьЗаписьToolStripMenuItem.Text = "Добавить запись";
+            добавитьНомерToolStripMenuItem.Name = "добавитьНомерToolStripMenuItem";
+            добавитьНомерToolStripMenuItem.Size = new Size(110, 20);
+            добавитьНомерToolStripMenuItem.Text = "Добавить номер";
+            добавитьНомерToolStripMenuItem.Click += добавитьНомерToolStripMenuItem_Click;
+            // 
+            // удалитьНомерToolStripMenuItem
+            // 
+            удалитьНомерToolStripMenuItem.Name = "удалитьНомерToolStripMenuItem";
+            удалитьНомерToolStripMenuItem.Size = new Size(102, 20);
+            удалитьНомерToolStripMenuItem.Text = "Удалить номер";
+            удалитьНомерToolStripMenuItem.Click += удалитьНомерToolStripMenuItem_Click;
             // 
             // dgvGuests
             // 
@@ -129,7 +138,8 @@
         private DataGridView dgvRooms;
         private MenuStrip menuStrip1;
         private ToolStripMenuItem добавитьГостяToolStripMenuItem;
-        private ToolStripMenuItem добавтьЗаписьToolStripMenuItem;
         private DataGridView dgvGuests;
+        private ToolStripMenuItem добавитьНомерToolStripMenuItem;
+        private ToolStripMenuItem удалитьНомерToolStripMenuItem;
     }
 }
