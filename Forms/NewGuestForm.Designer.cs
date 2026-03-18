@@ -119,6 +119,7 @@
             // textBox2
             // 
             textBox2.Location = new Point(114, 190);
+            textBox2.MaxLength = 4;
             textBox2.Name = "textBox2";
             textBox2.Size = new Size(100, 23);
             textBox2.TabIndex = 8;
@@ -126,6 +127,7 @@
             // textBox3
             // 
             textBox3.Location = new Point(114, 154);
+            textBox3.MaxLength = 4;
             textBox3.Name = "textBox3";
             textBox3.Size = new Size(100, 23);
             textBox3.TabIndex = 9;

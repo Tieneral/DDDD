@@ -45,7 +45,6 @@ namespace DDDD.Forms
                 return;
             }
 
-            // Проверка, что номер и этаж являются числами
             if (!int.TryParse(textBox1.Text, out int roomNumber))
             {
                 MessageBox.Show("Номер комнаты должен быть числом", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
