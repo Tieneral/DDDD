@@ -27,10 +27,14 @@ namespace DDDD
             dgvRooms.ReadOnly = false;
             dgvRooms.EditMode = DataGridViewEditMode.EditOnEnter;
 
-            dgvGuests.AllowUserToAddRows = true;
-            dgvGuests.AllowUserToDeleteRows = true;
-            dgvGuests.ReadOnly = false;
-            dgvGuests.EditMode = DataGridViewEditMode.EditOnEnter;
+            dgvRooms.CellEndEdit += DgvRooms_CellEndEdit;
+            dgvRooms.UserDeletedRow += DgvRooms_UserDeletedRow;
+
+            dgvGuests.AllowUserToAddRows = false;
+            dgvGuests.AllowUserToDeleteRows = false;
+            dgvGuests.ReadOnly = true;
+            dgvGuests.EditMode = DataGridViewEditMode.EditProgrammatically;
+
         }
 
         public void GetData()
@@ -67,6 +71,12 @@ namespace DDDD
                           "Category as 'Тип номера', Locked as 'Занят?' FROM Room";
 
             using var adapter = new SQLiteDataAdapter(query, conn);
+
+            var builder = new SQLiteCommandBuilder(adapter);
+            adapter.UpdateCommand = builder.GetUpdateCommand();
+            adapter.InsertCommand = builder.GetInsertCommand();
+            adapter.DeleteCommand = builder.GetDeleteCommand();
+
             adapter.Fill(dataTable);
 
             return dataTable;
@@ -79,14 +89,104 @@ namespace DDDD
             using var conn = new SQLiteConnection($"Data Source={HotelDatabase.ConnectionString};Version=3;");
             conn.Open();
 
-            string query = "SELECT Id, Name as 'Имя', Surname as 'Фамилия', " +
-                          "Last_Name as 'Отчество', Phone as 'Телефон', " +
-                          "Passport as 'Паспорт', RoomID as 'Номер комнаты' FROM Guest";
+            string query = @"
+        SELECT 
+            Guest.Id, 
+            Guest.Name as 'Имя', 
+            Guest.Surname as 'Фамилия', 
+            Guest.Last_Name as 'Отчество', 
+            Guest.Phone as 'Телефон', 
+            Guest.Passport as 'Паспорт',
+            Room.Number as 'Номер комнаты'
+        FROM Guest
+        LEFT JOIN Room ON Guest.RoomID = Room.Id";
 
             using var adapter = new SQLiteDataAdapter(query, conn);
             adapter.Fill(dataTable);
 
             return dataTable;
+        }
+
+        private void DgvRooms_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            try
+            {
+                var dataTable = (DataTable)dgvRooms.DataSource;
+
+                using var conn = new SQLiteConnection($"Data Source={HotelDatabase.ConnectionString};Version=3;");
+                conn.Open();
+
+                // Получаем ID изменяемой записи
+                int rowId = Convert.ToInt32(dataTable.Rows[e.RowIndex]["Id"]);
+                string columnName = dataTable.Columns[e.ColumnIndex].ColumnName;
+                object newValue = dataTable.Rows[e.RowIndex][e.ColumnIndex];
+
+                string dbColumnName = columnName switch
+                {
+                    "Номер в фонде" => "Number",
+                    "Этаж" => "Layer",
+                    "Тип номера" => "Category",
+                    "Занят?" => "Locked",
+                    _ => columnName
+                };
+
+                if (dbColumnName != "Id")
+                {
+                    string updateQuery = $"UPDATE Room SET {dbColumnName} = @value WHERE Id = @id";
+
+                    using var cmd = new SQLiteCommand(updateQuery, conn);
+                    cmd.Parameters.AddWithValue("@value", newValue ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@id", rowId);
+
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                GetData();
+            }
+        }
+
+        private void DgvRooms_UserDeletedRow(object sender, DataGridViewRowEventArgs e)
+        {
+            try
+            {
+                if (e.Row.Cells["Id"].Value != null && e.Row.Cells["Id"].Value != DBNull.Value)
+                {
+                    int rowId = Convert.ToInt32(e.Row.Cells["Id"].Value);
+
+                    using var conn = new SQLiteConnection($"Data Source={HotelDatabase.ConnectionString};Version=3;");
+                    conn.Open();
+
+                    string checkGuestsQuery = "SELECT COUNT(*) FROM Guest WHERE RoomID = @roomId";
+                    using var checkCmd = new SQLiteCommand(checkGuestsQuery, conn);
+                    checkCmd.Parameters.AddWithValue("@roomId", rowId);
+
+                    int guestsCount = Convert.ToInt32(checkCmd.ExecuteScalar());
+
+                    if (guestsCount > 0)
+                    {
+                        MessageBox.Show("Нельзя удалить номер, в котором есть гости.",
+                            "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+                        GetData();
+                        return;
+                    }
+
+                    string deleteQuery = "DELETE FROM Room WHERE Id = @id";
+                    using var deleteCmd = new SQLiteCommand(deleteQuery, conn);
+                    deleteCmd.Parameters.AddWithValue("@id", rowId);
+
+                    deleteCmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при удалении записи: {ex.Message}", "Ошибка",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                GetData();
+            }
         }
 
         private void добавитьГостяToolStripMenuItem_Click(object sender, EventArgs e)

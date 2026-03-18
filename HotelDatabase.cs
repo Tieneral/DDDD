@@ -93,7 +93,6 @@ namespace DDDD
             return guest;
         }
 
-        // НОВЫЙ МЕТОД: Добавление комнаты
         public static Rooms AddRoom(Rooms room)
         {
             using var conn = new SQLiteConnection($"Data Source={ConnectionString};Version=3;");
@@ -119,8 +118,6 @@ namespace DDDD
 
             return room;
         }
-
-        // НОВЫЙ МЕТОД: Проверка существования комнаты по номеру
         public static bool IsRoomExists(string roomNumber)
         {
             using var conn = new SQLiteConnection($"Data Source={ConnectionString};Version=3;");
