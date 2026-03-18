@@ -22,7 +22,7 @@ namespace DDDD
 
         private void SetupDataGridViews()
         {
-            dgvRooms.AllowUserToAddRows = true;
+            dgvRooms.AllowUserToAddRows = false;
             dgvRooms.AllowUserToDeleteRows = true;
             dgvRooms.ReadOnly = false;
             dgvRooms.EditMode = DataGridViewEditMode.EditOnEnter;
@@ -34,7 +34,6 @@ namespace DDDD
             dgvGuests.AllowUserToDeleteRows = false;
             dgvGuests.ReadOnly = true;
             dgvGuests.EditMode = DataGridViewEditMode.EditProgrammatically;
-
         }
 
         public void GetData()
@@ -158,26 +157,35 @@ namespace DDDD
                     using var conn = new SQLiteConnection($"Data Source={HotelDatabase.ConnectionString};Version=3;");
                     conn.Open();
 
-                    string checkGuestsQuery = "SELECT COUNT(*) FROM Guest WHERE RoomID = @roomId";
-                    using var checkCmd = new SQLiteCommand(checkGuestsQuery, conn);
-                    checkCmd.Parameters.AddWithValue("@roomId", rowId);
+                    using var transaction = conn.BeginTransaction();
 
-                    int guestsCount = Convert.ToInt32(checkCmd.ExecuteScalar());
-
-                    if (guestsCount > 0)
+                    try
                     {
-                        MessageBox.Show("Нельзя удалить номер, в котором есть гости.",
-                            "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        string deleteGuestsQuery = "DELETE FROM Guest WHERE RoomID = @roomId";
+                        using var deleteGuestsCmd = new SQLiteCommand(deleteGuestsQuery, conn, transaction);
+                        deleteGuestsCmd.Parameters.AddWithValue("@roomId", rowId);
 
-                        GetData();
-                        return;
+                        int deletedGuestsCount = deleteGuestsCmd.ExecuteNonQuery();
+
+                        string deleteRoomQuery = "DELETE FROM Room WHERE Id = @id";
+                        using var deleteRoomCmd = new SQLiteCommand(deleteRoomQuery, conn, transaction);
+                        deleteRoomCmd.Parameters.AddWithValue("@id", rowId);
+
+                        deleteRoomCmd.ExecuteNonQuery();
+
+                        transaction.Commit();
+
+                        if (deletedGuestsCount > 0)
+                        {
+                            MessageBox.Show($"Номер и {deletedGuestsCount} гостей успешно удалены.",
+                                "Информация", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
                     }
-
-                    string deleteQuery = "DELETE FROM Room WHERE Id = @id";
-                    using var deleteCmd = new SQLiteCommand(deleteQuery, conn);
-                    deleteCmd.Parameters.AddWithValue("@id", rowId);
-
-                    deleteCmd.ExecuteNonQuery();
+                    catch (Exception)
+                    {
+                        transaction.Rollback();
+                        throw; 
+                    }
                 }
             }
             catch (Exception ex)
