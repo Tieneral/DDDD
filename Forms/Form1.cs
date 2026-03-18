@@ -15,8 +15,6 @@ namespace DDDD
         public Form1()
         {
             InitializeComponent();
-
-            // Настройка DataGridView для редактирования
             SetupDataGridViews();
 
             GetData();
@@ -24,13 +22,11 @@ namespace DDDD
 
         private void SetupDataGridViews()
         {
-            // Настройка dgvRooms
             dgvRooms.AllowUserToAddRows = true;
             dgvRooms.AllowUserToDeleteRows = true;
             dgvRooms.ReadOnly = false;
             dgvRooms.EditMode = DataGridViewEditMode.EditOnEnter;
 
-            // Настройка dgvGuests
             dgvGuests.AllowUserToAddRows = true;
             dgvGuests.AllowUserToDeleteRows = true;
             dgvGuests.ReadOnly = false;
@@ -41,19 +37,15 @@ namespace DDDD
         {
             try
             {
-                // Получаем данные в виде DataTable для Rooms
                 roomsTable = GetRoomsDataTable();
                 dgvRooms.DataSource = roomsTable;
 
-                // Скрываем колонку ID, если она есть
                 if (dgvRooms.Columns["Id"] != null)
                     dgvRooms.Columns["Id"].Visible = false;
 
-                // Получаем данные в виде DataTable для Guests
                 guestsTable = GetGuestsDataTable();
                 dgvGuests.DataSource = guestsTable;
 
-                // Скрываем колонку ID, если она есть
                 if (dgvGuests.Columns["Id"] != null)
                     dgvGuests.Columns["Id"].Visible = false;
             }
@@ -113,20 +105,16 @@ namespace DDDD
             GetData();
         }
 
-        // Новый пункт меню для удаления комнаты
         private void удалитьНомерToolStripMenuItem_Click(object sender, EventArgs e)
         {
             DeleteRoomForm deleteRoomForm = new DeleteRoomForm();
 
-            // Показываем форму и проверяем результат
             if (deleteRoomForm.ShowDialog() == DialogResult.OK)
             {
-                // Если удаление прошло успешно, обновляем данные
                 GetData();
             }
         }
 
-        // Дополнительный метод для обновления данных после изменений
         private void обновитьToolStripMenuItem_Click(object sender, EventArgs e)
         {
             GetData();
